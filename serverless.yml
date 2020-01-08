@@ -30,6 +30,8 @@ custom:
     stages:
       - dev
       - test
+    start:
+      inMemory: false
   
 provider:
   name: aws
@@ -73,8 +75,16 @@ functions:
     handler: handler.hello
   likeBlog:
     handler: handler.likeBlog
+    events:
+      - http:
+          path: like
+          method: post
   visitBlog:
     handler: handler.visitBlog
+    events:
+      - http:
+          path: visit
+          method: post
   getLikes:
     handler: handler.getLikes
     events:
@@ -130,15 +140,15 @@ functions:
 # you can add CloudFormation resource templates here
 resources:
   Resources:
-    usersTable:
+    BlogLike:
       Type: AWS::DynamoDB::Table
       Properties:
-        TableName: usersTable
+        TableName: BlogLike
         AttributeDefinitions:
-          - AttributeName: email
+          - AttributeName: BlogID
             AttributeType: S
         KeySchema:
-          - AttributeName: email
+          - AttributeName: BlogID
             KeyType: HASH
         ProvisionedThroughput:
           ReadCapacityUnits: 1

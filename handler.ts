@@ -1,4 +1,5 @@
-const AWS = require('aws-sdk');
+// const AWS = require('aws-sdk');
+import * as AWS from 'aws-sdk';
 
 const isDev = process.env.NODE_ENV === 'development';
 const dbConnection = isDev ? {
@@ -6,7 +7,7 @@ const dbConnection = isDev ? {
   endpoint: 'http://localhost:8000'
 } : undefined;
 
-module.exports.hello = async (event) => {
+export const hello = async (event) => {
   return {
     statusCode: 200,
     body: JSON.stringify(
@@ -24,7 +25,18 @@ const getLikeByBlogID = () => {
   return null;
 };
 
-module.exports.getLikes = (event, context, callback) => {
+const wrapSuccessRes = (resData, header = {}) => {
+  return {
+    statusCode: 200,
+    headers: {
+      "Access-Control-Allow-Origin": "*",
+      ...header
+    },
+    body: JSON.stringify(resData),
+  };
+};
+
+export const getLikes = (event, context, callback) => {
   const dynamoDb = new AWS.DynamoDB.DocumentClient(dbConnection);
   const params = {
     TableName: 'BlogLike',
@@ -36,33 +48,41 @@ module.exports.getLikes = (event, context, callback) => {
 
     const { Items, Count } = queryData || {};
     const result = {
-      message: 'asd',
       Items,
       Count,
     };
-    const response = {
-      statusCode: 200,
-      headers: {
-        "Access-Control-Allow-Origin": "*"
-      },
-      body: JSON.stringify(result),
-    };
-    context.succeed(response);
+    context.succeed(wrapSuccessRes(result));
     callback(null, result);
   });
 };
 
-module.exports.likeBlog = async (event, context, callback) => {
+export const likeBlog = async (event, context) => {
   const dynamoDb = new AWS.DynamoDB.DocumentClient(dbConnection);
-  return dynamoDb.query({}, (err, queryData) => {
-    const params = {
-
-    };
-    dynamoDb.createSet(params, (error, data) => {
-      if (error) {
-        callback(error);
+  const BlogID = event.queryStringParameters.id;
+  const clientIP = event.requestContext.identity.sourceIp;
+  const queryData = await dynamoDb
+    .get({
+      TableName: 'BlogLike',
+      Key: {
+        BlogID
       }
-      callback(null, { message: 'Profile successfully updated', params });
-    });
-  });
+    })
+    .promise();
+  const { Item } = queryData || {};
+  if (Item) {
+    const result = {
+      Item,
+    };
+    return wrapSuccessRes({ clientIP, result });
+  }
+  const putDataRes = await dynamoDb
+    .put({
+      TableName: 'BlogLike',
+      Item: {
+        BlogID,
+        Message: 'Put item'
+      }
+    })
+    .promise();
+  return wrapSuccessRes({ clientIP, putDataRes });
 };
