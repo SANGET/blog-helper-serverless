@@ -33,6 +33,7 @@ module.exports.getLikes = (event, context, callback) => {
     if (err) {
       callback(err);
     }
+
     const { Items, Count } = queryData || {};
     const result = {
       message: 'asd',
