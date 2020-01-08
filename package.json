@@ -5,7 +5,7 @@
   "scripts": {
     "setup": "sls dynamodb install",
     "start:db": "sls dynamodb start",
-    "dev": "sls offline"
+    "dev": "NODE_ENV=development sls offline"
   },
   "author": "",
   "license": "MIT",

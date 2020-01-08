@@ -25,6 +25,12 @@ plugins:
   - serverless-dynamodb-local
   - serverless-offline
 
+custom:
+  dynamodb:
+    stages:
+      - dev
+      - test
+  
 provider:
   name: aws
   runtime: nodejs12.x
@@ -122,6 +128,21 @@ functions:
 #      variable2: value2
 
 # you can add CloudFormation resource templates here
+resources:
+  Resources:
+    usersTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: usersTable
+        AttributeDefinitions:
+          - AttributeName: email
+            AttributeType: S
+        KeySchema:
+          - AttributeName: email
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
 #resources:
 #  Resources:
 #    NewResource:

@@ -1,5 +1,11 @@
 const AWS = require('aws-sdk');
 
+const isDev = process.env.NODE_ENV === 'development';
+const dbConnection = isDev ? {
+  region: 'localhost',
+  endpoint: 'http://localhost:8000'
+} : undefined;
+
 module.exports.hello = async (event) => {
   return {
     statusCode: 200,
@@ -18,25 +24,35 @@ const getLikeByBlogID = () => {
   return null;
 };
 
-module.exports.getLikes = async (event, context, callback) => {
-  const dynamoDb = new AWS.DynamoDB.DocumentClient();
+module.exports.getLikes = (event, context, callback) => {
+  const dynamoDb = new AWS.DynamoDB.DocumentClient(dbConnection);
   const params = {
     TableName: 'BlogLike',
   };
-  return dynamoDb.query(params, (err, queryData) => {
+  dynamoDb.scan(params, (err, queryData) => {
     if (err) {
       callback(err);
     }
-    const { Items, Count } = queryData;
-    callback(null, {
+    const { Items, Count } = queryData || {};
+    const result = {
+      message: 'asd',
       Items,
       Count,
-    });
+    };
+    const response = {
+      statusCode: 200,
+      headers: {
+        "Access-Control-Allow-Origin": "*"
+      },
+      body: JSON.stringify(result),
+    };
+    context.succeed(response);
+    callback(null, result);
   });
 };
 
 module.exports.likeBlog = async (event, context, callback) => {
-  const dynamoDb = new AWS.DynamoDB.DocumentClient();
+  const dynamoDb = new AWS.DynamoDB.DocumentClient(dbConnection);
   return dynamoDb.query({}, (err, queryData) => {
     const params = {
 
