@@ -1,0 +1,22 @@
+{
+  "name": "blog-helper-serverless",
+  "version": "0.1.0",
+  "description": "blog services for alex's blog",
+  "scripts": {
+    "setup": "sls dynamodb install",
+    "start:db": "sls dynamodb start",
+    "dev": "sls offline"
+  },
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "aws-sdk": "^2.598.0",
+    "uuid": "^3.3.3"
+  },
+  "devDependencies": {
+    "serverless-dynamodb-local": "0.2.38",
+    "serverless-offline": "5.12.1",
+    "serverless-plugin-typescript": "^1.1.9",
+    "typescript": "^3.7.4"
+  }
+}
