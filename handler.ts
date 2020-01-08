@@ -15,7 +15,7 @@ module.exports.hello = async (event) => {
 };
 
 const getLikeByBlogID = () => {
-
+  return null;
 };
 
 module.exports.getLikes = async (event, context, callback) => {
