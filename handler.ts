@@ -80,10 +80,7 @@ export const likeBlog = async (event, context) => {
   const { Item } = queryData || {};
   if (Item) {
     // 如果该 IP 已经点了 like，则直接返回
-    const result = {
-      Item,
-    };
-    return wrapSuccessRes({ clientIP, result });
+    return wrapSuccessRes(Item);
   }
   // 如果该 IP 没有点了 like，则进入 like 流程
   const putDataRes = await dynamoDb
