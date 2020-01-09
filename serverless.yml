@@ -71,8 +71,6 @@ provider:
 #    - exclude-me-dir/**
 
 functions:
-  hello:
-    handler: handler.hello
   likeBlog:
     handler: handler.likeBlog
     events:
@@ -91,6 +89,12 @@ functions:
       - http:
           path: likes
           method: get
+  getLikesByTitles:
+    handler: handler.getLikesByTitles
+    events:
+      - http:
+          path: likes
+          method: post
   getVisitors:
     handler: handler.getVisitors
     events:

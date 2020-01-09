@@ -3,15 +3,20 @@ const createParams = {
   // The type of of schema.  Must start with a HASH type, with an optional second RANGE.
   KeySchema: [
     {
-      AttributeName: 'BlogID',
+      AttributeName: 'ID',
       KeyType: 'HASH',
     },
-    {
-      AttributeName: 'IP',
-      KeyType: 'RANGE',
-    },
+    // {
+    //   AttributeName: 'IP',
+    //   KeyType: 'RANGE',
+    // },
   ],
-  AttributeDefinitions: [ // The names and types of all primary and index key attributes only
+  // The names and types of all primary and index key attributes only
+  AttributeDefinitions: [
+    {
+      AttributeName: 'ID',
+      AttributeType: 'S', // (S | N | B) for string, number, binary
+    },
     {
       AttributeName: 'BlogID',
       AttributeType: 'S', // (S | N | B) for string, number, binary
@@ -25,6 +30,28 @@ const createParams = {
     ReadCapacityUnits: 1,
     WriteCapacityUnits: 1,
   },
+  GlobalSecondaryIndexes: [ // optional (list of LocalSecondaryIndex)
+    {
+      IndexName: 'BlogIPIndex',
+      KeySchema: [
+        { // Required HASH type attribute - must match the table's HASH key attribute name
+          AttributeName: 'BlogID',
+          KeyType: 'HASH',
+        },
+        {
+          AttributeName: 'IP',
+          KeyType: 'RANGE',
+        },
+      ],
+      Projection: { // required
+        ProjectionType: 'ALL', // (ALL | KEYS_ONLY | INCLUDE)
+      },
+      ProvisionedThroughput: { // throughput to provision to the index
+        ReadCapacityUnits: 1,
+        WriteCapacityUnits: 1,
+      },
+    },
+  ],
 };
 dynamodb.createTable(createParams, (err, data) => {
   if (err) ppJson(err); // an error occurred
