@@ -1,14 +1,23 @@
 const createParams = {
   TableName: 'BlogLike',
-  KeySchema: [ // The type of of schema.  Must start with a HASH type, with an optional second RANGE.
-    { // Required HASH type attribute
+  // The type of of schema.  Must start with a HASH type, with an optional second RANGE.
+  KeySchema: [
+    {
       AttributeName: 'BlogID',
       KeyType: 'HASH',
+    },
+    {
+      AttributeName: 'IP',
+      KeyType: 'RANGE',
     },
   ],
   AttributeDefinitions: [ // The names and types of all primary and index key attributes only
     {
       AttributeName: 'BlogID',
+      AttributeType: 'S', // (S | N | B) for string, number, binary
+    },
+    {
+      AttributeName: 'IP',
       AttributeType: 'S', // (S | N | B) for string, number, binary
     },
   ],

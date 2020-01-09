@@ -1,6 +1,11 @@
 // const AWS = require('aws-sdk');
 import * as AWS from 'aws-sdk';
 
+import parseBody from './utils/parse-body';
+import { BlogNamespace } from './utils/constant';
+// import { v5 as uuid } from 'uuid';
+const uuid = require('uuid/v5');
+
 const isDev = process.env.NODE_ENV === 'development';
 const dbConnection = isDev ? {
   region: 'localhost',
@@ -58,29 +63,36 @@ export const getLikes = (event, context, callback) => {
 
 export const likeBlog = async (event, context) => {
   const dynamoDb = new AWS.DynamoDB.DocumentClient(dbConnection);
-  const BlogID = event.queryStringParameters.id;
   const clientIP = event.requestContext.identity.sourceIp;
+  const eventBody = parseBody(event);
+  const { blogTitle } = eventBody;
+  const BlogID = uuid(blogTitle, BlogNamespace);
+  // return wrapSuccessRes({ blogTitle, BlogID });
   const queryData = await dynamoDb
     .get({
       TableName: 'BlogLike',
       Key: {
-        BlogID
+        BlogID,
+        IP: clientIP
       }
     })
     .promise();
   const { Item } = queryData || {};
   if (Item) {
+    // 如果该 IP 已经点了 like，则直接返回
     const result = {
       Item,
     };
     return wrapSuccessRes({ clientIP, result });
   }
+  // 如果该 IP 没有点了 like，则进入 like 流程
   const putDataRes = await dynamoDb
     .put({
       TableName: 'BlogLike',
       Item: {
         BlogID,
-        Message: 'Put item'
+        IP: clientIP,
+        ActionDate: Date.now()
       }
     })
     .promise();
