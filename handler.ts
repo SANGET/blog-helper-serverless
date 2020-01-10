@@ -5,7 +5,12 @@ import {
   parseBody, genBlogID, getClientIPAndFP, genBlogStorage
 } from './utils/helpers';
 import { connectDB, BlogTableName, BlogTableIndex } from './utils/connect-db';
-import { BlogActionTypes } from './utils/constant';
+import { BlogActionTypes, BlogStatisticsID } from './utils/constant';
+
+import { initDB as internalInitDB } from './utils/init-db';
+import { createStatisticsItem, updateStatisticsItem } from './utils/statistics';
+
+export const initDB = internalInitDB;
 
 const uuidv4 = require('uuid/v4');
 
@@ -13,7 +18,7 @@ const getLikeByBlogID = () => {
   return null;
 };
 
-const wrapSuccessRes = (resData, header = {}, status = 200) => {
+const wrapResData = (resData, header = {}, status = 200) => {
   return {
     statusCode: status,
     headers: {
@@ -29,7 +34,7 @@ export const visitBlog = async (event, context) => {
   const { queryStringParameters } = event;
 
   if (!queryStringParameters || !queryStringParameters.blogTitle) {
-    return wrapSuccessRes({
+    return wrapResData({
       Message: 'Need to pass blogTitle'
     }, {}, 400);
   }
@@ -41,6 +46,10 @@ export const visitBlog = async (event, context) => {
     TableName: BlogTableName,
     IndexName: BlogTableIndex,
     KeyConditions: {
+      BlogID: {
+        ComparisonOperator: 'EQ',
+        AttributeValueList: [BlogID]
+      },
       IP: {
         ComparisonOperator: 'EQ',
         AttributeValueList: [clientIP]
@@ -53,8 +62,25 @@ export const visitBlog = async (event, context) => {
     .promise();
   const { Items, Count } = queryData || {};
 
+  // dynamoDb
+  //   .update({
+  //     TableName: BlogTableName,
+  //     Key: {
+  //       ID: BlogStatisticsID
+  //     },
+  //     UpdateExpression: "SET ",
+  //   })
+  //   .promise();
+
+
+  // 确保已创建统计 item
+  await createStatisticsItem(dynamoDb);
+  updateStatisticsItem(dynamoDb, {
+    BlogID,
+    type: 'visit'
+  });
   if (!!Count && Count > 0) {
-    return wrapSuccessRes({
+    return wrapResData({
       Message: 'Visited.'
     });
   }
@@ -73,7 +99,7 @@ export const visitBlog = async (event, context) => {
     })
     .promise();
 
-  return wrapSuccessRes({ clientIP, Message: "Liked" });
+  return wrapResData({ clientIP, Message: "Add Visited." });
   // const queryData = await dynamoDb
   //   .scan(params)
   //   .promise();
@@ -110,7 +136,7 @@ export const getLikesByTitles = async (event, context) => {
     Count,
   };
 
-  return wrapSuccessRes(result);
+  return wrapResData(result);
 };
 
 export const likeBlog = async (event, context) => {
@@ -119,7 +145,7 @@ export const likeBlog = async (event, context) => {
   const eventBody = parseBody(event);
   const { blogTitle } = eventBody;
   const BlogID = genBlogID(blogTitle);
-  // return wrapSuccessRes({ blogTitle, BlogID });
+  // return wrapResData({ blogTitle, BlogID });
   const queryData = await dynamoDb
     .query({
       TableName: BlogTableName,
@@ -136,7 +162,7 @@ export const likeBlog = async (event, context) => {
 
   if (!!Count && Count > 0) {
     // 如果该 IP 已经点了 like，则直接返回
-    return wrapSuccessRes({
+    return wrapResData({
       Message: "Liked"
     });
   }
@@ -156,5 +182,5 @@ export const likeBlog = async (event, context) => {
     })
     .promise();
 
-  return wrapSuccessRes({ clientIP, Message: "Liked" });
+  return wrapResData({ clientIP, Message: "Liked" });
 };

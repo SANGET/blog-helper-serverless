@@ -35,7 +35,7 @@
     "no-plusplus": 0,
     "comma-dangle": 0,
     "no-extend-native": 0,
-    "quotes": 0,
+    "quotes": 0
   },
   "settings": {
     "import/resolver": {

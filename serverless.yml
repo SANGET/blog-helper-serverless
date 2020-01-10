@@ -71,6 +71,12 @@ provider:
 #    - exclude-me-dir/**
 
 functions:
+  initDB:
+    handler: handler.initDB
+    events:
+      - http:
+          path: __init_db__
+          method: get
   likeBlog:
     handler: handler.likeBlog
     events:

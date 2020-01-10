@@ -18,11 +18,11 @@
     "@types/uuid": "^3.4.6",
     "@typescript-eslint/eslint-plugin": "^2.7.0",
     "@typescript-eslint/parser": "^2.7.0",
-    "eslint": "^6.5.1",
+    "eslint": "^6.8.0",
     "eslint-config-airbnb": "^18.0.1",
-    "eslint-plugin-import": "^2.18.2",
+    "eslint-plugin-import": "^2.19.1",
     "serverless-dynamodb-local": "0.2.38",
-    "serverless-offline": "5.12.1",
+    "serverless-offline": "^6.0.0-alpha.60",
     "serverless-plugin-typescript": "^1.1.9",
     "typescript": "^3.7.4"
   }

@@ -5,3 +5,5 @@ export const BlogActionTypes = {
   visit: 'visit',
   comment: 'comment',
 };
+
+export const BlogStatisticsID = 'BlogStatistics';

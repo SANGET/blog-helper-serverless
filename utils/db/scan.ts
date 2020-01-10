@@ -1,5 +1,5 @@
 const scanParams = {
-  TableName: 'BlogLike',
+  TableName: 'BlogState',
   // Limit: 110, // optional (limit the number of items to evaluate)
   // // FilterExpression: 'attribute_name = :value', // a string representing a constraint on the attribute
   // // ExpressionAttributeNames: { // a map of substitutions for attribute names with special characters
