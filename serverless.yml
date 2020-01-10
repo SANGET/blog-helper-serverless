@@ -82,12 +82,6 @@ functions:
     events:
       - http:
           path: visit
-          method: post
-  getLikes:
-    handler: handler.getLikes
-    events:
-      - http:
-          path: likes
           method: get
   getLikesByTitles:
     handler: handler.getLikesByTitles

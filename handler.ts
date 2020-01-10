@@ -1,25 +1,21 @@
 // const AWS = require('aws-sdk');
 import * as AWS from 'aws-sdk';
 
-import parseBody from './utils/parse-body';
-import { BlogNamespace } from './utils/constant';
-// import { v5 as uuid } from 'uuid';
-const uuidv5 = require('uuid/v5');
-const uuidv4 = require('uuid/v4');
+import {
+  parseBody, genBlogID, getClientIPAndFP, genBlogStorage
+} from './utils/helpers';
+import { connectDB, BlogTableName, BlogTableIndex } from './utils/connect-db';
+import { BlogActionTypes } from './utils/constant';
 
-const isDev = process.env.NODE_ENV === 'development';
-const dbConnection = isDev ? {
-  region: 'localhost',
-  endpoint: 'http://localhost:8000'
-} : undefined;
+const uuidv4 = require('uuid/v4');
 
 const getLikeByBlogID = () => {
   return null;
 };
 
-const wrapSuccessRes = (resData, header = {}) => {
+const wrapSuccessRes = (resData, header = {}, status = 200) => {
   return {
-    statusCode: 200,
+    statusCode: status,
     headers: {
       "Access-Control-Allow-Origin": "*",
       ...header
@@ -28,79 +24,106 @@ const wrapSuccessRes = (resData, header = {}) => {
   };
 };
 
-export const getLikes = async (event, context) => {
-  const dynamoDb = new AWS.DynamoDB.DocumentClient(dbConnection);
-  const params = {
-    TableName: 'BlogLike',
-  };
+export const visitBlog = async (event, context) => {
+  const dynamoDb = connectDB();
   const { queryStringParameters } = event;
-  if (!queryStringParameters) {
-    const queryData = await dynamoDb
-      .scan(params)
-      .promise();
-    const { Items, Count } = queryData || {};
-    const result = {
-      Items,
-      Count,
-    };
-    return wrapSuccessRes(result);
-  }
-  const { title } = queryStringParameters;
-  const base64 = Buffer.from(title).toString('base64');
-  // const queryData = await dynamoDb
-  //   .scan(params)
-  //   .promise();
-  return wrapSuccessRes({ base64 });
-};
 
-export const getLikesByTitles = async (event, context) => {
-  const dynamoDb = new AWS.DynamoDB.DocumentClient(dbConnection);
-  const eventBody = parseBody(event);
-  const { blogTitles } = eventBody;
-  let _blogTitles = blogTitles;
-  if (!Array.isArray(blogTitles)) {
-    _blogTitles = [blogTitles];
+  if (!queryStringParameters || !queryStringParameters.blogTitle) {
+    return wrapSuccessRes({
+      Message: 'Need to pass blogTitle'
+    }, {}, 400);
   }
-  _blogTitles = _blogTitles.filter((item) => !!item);
+
+  const { ip: clientIP } = getClientIPAndFP(event);
+  const { blogTitle } = queryStringParameters;
+  const BlogID = genBlogID(blogTitle);
   const params = {
-    RequestItems: {
-      BlogLike: {
-        Keys: _blogTitles.map((title) => ({
-          BlogID: uuidv5(title, BlogNamespace),
-        }))
+    TableName: BlogTableName,
+    IndexName: BlogTableIndex,
+    KeyConditions: {
+      IP: {
+        ComparisonOperator: 'EQ',
+        AttributeValueList: [clientIP]
       }
     }
   };
-  const queryData = await dynamoDb
-    .batchGet(params)
-    .promise();
-  // const params = {
-  //   TableName: 'BlogLike',
 
-  // };
+  const queryData = await dynamoDb
+    .query(params)
+    .promise();
+  const { Items, Count } = queryData || {};
+
+  if (!!Count && Count > 0) {
+    return wrapSuccessRes({
+      Message: 'Visited.'
+    });
+  }
+
+  const putDataRes = await dynamoDb
+    .put({
+      TableName: BlogTableName,
+      Item: {
+        ID: uuidv4(),
+        Type: BlogActionTypes.visit,
+        BlogID,
+        IP: clientIP,
+        ActionDate: Date.now(),
+        Title: genBlogStorage(blogTitle)
+      }
+    })
+    .promise();
+
+  return wrapSuccessRes({ clientIP, Message: "Liked" });
   // const queryData = await dynamoDb
   //   .scan(params)
   //   .promise();
-  console.log(queryData);
-  // const { Items, Count } = queryData || {};
-  // const result = {
-  //   Items,
-  //   Count,
-  // };
-  return wrapSuccessRes(params);
+};
+
+export const getLikesByTitles = async (event, context) => {
+  const dynamoDb = connectDB();
+  const eventBody = parseBody(event);
+  const { blogTitles } = eventBody;
+  let _blogTitles = blogTitles;
+
+  if (!Array.isArray(blogTitles)) {
+    _blogTitles = [blogTitles];
+  }
+
+  _blogTitles = _blogTitles.filter((item) => !!item);
+
+  const params = {
+    TableName: BlogTableName,
+    IndexName: BlogTableIndex,
+    KeyConditions: {
+      BlogID: {
+        ComparisonOperator: 'EQ',
+        AttributeValueList: _blogTitles.map((title) => genBlogID(title))
+      }
+    }
+  };
+
+  const queryData = await dynamoDb
+    .query(params)
+    .promise();
+  const { Items, Count } = queryData || {};
+  const result = {
+    Count,
+  };
+
+  return wrapSuccessRes(result);
 };
 
 export const likeBlog = async (event, context) => {
-  const dynamoDb = new AWS.DynamoDB.DocumentClient(dbConnection);
-  const clientIP = event.requestContext.identity.sourceIp;
+  const dynamoDb = connectDB();
+  const { ip: clientIP } = getClientIPAndFP(event);
   const eventBody = parseBody(event);
   const { blogTitle } = eventBody;
-  const BlogID = uuidv5(blogTitle, BlogNamespace);
+  const BlogID = genBlogID(blogTitle);
   // return wrapSuccessRes({ blogTitle, BlogID });
   const queryData = await dynamoDb
     .query({
-      TableName: 'BlogLike',
-      IndexName: 'BlogIPIndex',
+      TableName: BlogTableName,
+      IndexName: BlogTableIndex,
       KeyConditionExpression: 'BlogID = :blogID AND IP = :ip',
       ExpressionAttributeValues: {
         ":blogID": BlogID,
@@ -108,19 +131,23 @@ export const likeBlog = async (event, context) => {
       }
     })
     .promise();
+
   const { Count } = queryData || {};
+
   if (!!Count && Count > 0) {
     // 如果该 IP 已经点了 like，则直接返回
     return wrapSuccessRes({
       Message: "Liked"
     });
   }
+
   // 如果该 IP 没有点了 like，则进入 like 流程
   const putDataRes = await dynamoDb
     .put({
-      TableName: 'BlogLike',
+      TableName: BlogTableName,
       Item: {
         ID: uuidv4(),
+        Type: BlogActionTypes.like,
         BlogID,
         IP: clientIP,
         ActionDate: Date.now(),
@@ -128,5 +155,6 @@ export const likeBlog = async (event, context) => {
       }
     })
     .promise();
+
   return wrapSuccessRes({ clientIP, Message: "Liked" });
 };

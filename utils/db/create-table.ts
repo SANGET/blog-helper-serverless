@@ -1,15 +1,15 @@
 const createParams = {
-  TableName: 'BlogLike',
+  TableName: 'BlogState',
   // The type of of schema.  Must start with a HASH type, with an optional second RANGE.
   KeySchema: [
     {
       AttributeName: 'ID',
       KeyType: 'HASH',
     },
-    // {
-    //   AttributeName: 'IP',
-    //   KeyType: 'RANGE',
-    // },
+    {
+      AttributeName: 'BlogID',
+      KeyType: 'RANGE',
+    },
   ],
   // The names and types of all primary and index key attributes only
   AttributeDefinitions: [
