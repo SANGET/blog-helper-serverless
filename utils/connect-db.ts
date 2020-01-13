@@ -1,4 +1,4 @@
-import * as AWS from 'aws-sdk';
+import { DocumentClient } from 'aws-sdk/clients/dynamodb';
 
 const isDev = process.env.NODE_ENV === 'development';
 export const dbConnection = isDev ? {
@@ -7,7 +7,7 @@ export const dbConnection = isDev ? {
 } : undefined;
 
 export const connectDB = () => {
-  return new AWS.DynamoDB.DocumentClient(dbConnection);
+  return new DocumentClient(dbConnection);
 };
 
 export const BlogTableName = 'BlogState';

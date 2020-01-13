@@ -10,3 +10,4 @@ jspm_packages
 serverless_sdk
 serverless-crud
 *.log
+.DS_Store
