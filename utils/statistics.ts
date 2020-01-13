@@ -8,10 +8,10 @@ import { BlogTableName } from "./connect-db";
  */
 interface BlogStatisticsDataStruct {
   // hash key
-  ID: 'BlogID_Visit_Statistics';
+  ID: 'Statistics_type_BlogID';
   // range key
   BlogID: string;
-  Total: number;
+  Counter: number;
   // VisitorCount: {
   //   [blogID: string]: number;
   // };
@@ -20,10 +20,18 @@ interface BlogStatisticsDataStruct {
   // };
 }
 
-let hasStatisticsItemCache = false;
+const statisticsItemCache = {
+
+};
+
+interface StatisticsParams {
+  BlogID: number;
+  type: 'like' | 'visit';
+}
 
 export const getStatisticItem = (
-  dynamoDb: AWS.DynamoDB.DocumentClient
+  dynamoDb: AWS.DynamoDB.DocumentClient,
+  itemID: string
 ): Promise<AWS.DynamoDB.DocumentClient.QueryOutput> => {
   return new Promise((resolve, reject) => {
     dynamoDb
@@ -32,7 +40,7 @@ export const getStatisticItem = (
         KeyConditions: {
           ID: {
             ComparisonOperator: 'EQ',
-            AttributeValueList: [BlogStatisticsID]
+            AttributeValueList: [itemID]
           }
         }
       }, (err, data) => {
@@ -41,37 +49,42 @@ export const getStatisticItem = (
   });
 };
 
+export const wrapStatisticsItemID = (params: StatisticsParams) => {
+  return `${BlogStatisticsID}_${params.type}_${params.BlogID}`;
+};
+
 export const createStatisticsItem = (
-  dynamoDb: AWS.DynamoDB.DocumentClient
+  dynamoDb: AWS.DynamoDB.DocumentClient,
+  params: StatisticsParams
 ): Promise<{msg: string}> => {
   return new Promise(async (resolve, reject) => {
-    if (hasStatisticsItemCache) {
-      return resolve({ msg: 'Done' });
-    }
-    const queryRes = await getStatisticItem(dynamoDb);
-    if (queryRes.Count === 0) {
-      // 如果没有统计 item，则创建一个
-      dynamoDb.put({
-        TableName: BlogTableName,
-        Item: {
-          ID: BlogStatisticsID,
-          BlogID: BlogStatisticsID,
-        }
-      }, (putErr, putRes) => {
-        hasStatisticsItemCache = true;
-        resolve({ msg: 'Create Item Successed' });
-      });
+    const { BlogID } = params;
+    const itemID = wrapStatisticsItemID(params);
+    const hasCache = !!statisticsItemCache[itemID];
+    if (hasCache) {
+      resolve({ msg: 'Done' });
     } else {
-      hasStatisticsItemCache = true;
-      resolve({ msg: 'Has Record' });
+      const queryRes = await getStatisticItem(dynamoDb, itemID);
+      if (queryRes.Count === 0) {
+        // 如果没有统计 item，则创建一个
+        dynamoDb.put({
+          TableName: BlogTableName,
+          Item: {
+            ID: itemID,
+            BlogID,
+            Counter: 0
+          },
+        }, (putErr, putRes) => {
+          statisticsItemCache[itemID] = true;
+          resolve({ msg: 'Create Item Successed' });
+        });
+      } else {
+        statisticsItemCache[itemID] = true;
+        resolve({ msg: 'Has Record' });
+      }
     }
   });
 };
-
-interface UpdateParams {
-  BlogID: number;
-  type: 'like' | 'visit';
-}
 
 const typeToFieldMap = {
   like: 'LikeCount',
@@ -80,42 +93,28 @@ const typeToFieldMap = {
 
 export const updateStatisticsItem = (
   dynamoDb: AWS.DynamoDB.DocumentClient,
-  updateParams: UpdateParams
+  params: StatisticsParams
 ) => {
   return new Promise(async (resolve, reject) => {
-    await createStatisticsItem(dynamoDb);
-    const queryRes = await getStatisticItem(dynamoDb);
-    const { BlogID, type } = updateParams;
-    const statisticsItem = (queryRes.Items || [])[0];
-    const setField: string[] = [];
-    switch (type) {
-      case 'like':
-        setField.push('LikeCount');
-        break;
-      case 'visit':
-        setField.push('VisitorCount');
-        break;
-    }
-    if (setField.length > 0) {
-      let setExpression = '';
-      const expressionAttributeValues = {};
-      setField.forEach((item, idx) => {
-        setExpression += `${item} := setField${idx},`;
-        const currCount: number = (statisticsItem[item] || {})[BlogID] || 0;
-        expressionAttributeValues[`setField${idx}`] = {
-          N: String(currCount + 1)
-        };
-      });
-      setExpression = setExpression.replace(/,$/gi, '');
-      // console.log(JSON.stringify(expressionAttributeValues));
-      dynamoDb.update({
-        TableName: BlogTableName,
-        Key: {
-          ID: BlogStatisticsID
-        },
-        UpdateExpression: `SET ${setExpression}`,
-        ExpressionAttributeValues: expressionAttributeValues,
-      });
-    }
+    await createStatisticsItem(dynamoDb, params);
+    const { BlogID, type } = params;
+    const itemID = wrapStatisticsItemID(params);
+    dynamoDb.update({
+      TableName: BlogTableName,
+      Key: {
+        ID: itemID,
+        BlogID
+      },
+      UpdateExpression: `SET #c = #c + :increase`,
+      ExpressionAttributeNames: {
+        '#c': 'Counter'
+      },
+      ExpressionAttributeValues: {
+        ':increase': 1
+      },
+      ReturnValues: "UPDATED_NEW"
+    }, (err, data) => {
+      console.log(err, data);
+    });
   });
 };

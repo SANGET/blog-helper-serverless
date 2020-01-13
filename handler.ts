@@ -62,29 +62,18 @@ export const visitBlog = async (event, context) => {
     .promise();
   const { Items, Count } = queryData || {};
 
-  // dynamoDb
-  //   .update({
-  //     TableName: BlogTableName,
-  //     Key: {
-  //       ID: BlogStatisticsID
-  //     },
-  //     UpdateExpression: "SET ",
-  //   })
-  //   .promise();
-
-
-  // 确保已创建统计 item
-  updateStatisticsItem(dynamoDb, {
-    BlogID,
-    type: 'visit'
-  });
   if (!!Count && Count > 0) {
     return wrapResData({
       Message: 'Visited.'
     });
   }
+  // 更新该文章的 visitor 统计
+  updateStatisticsItem(dynamoDb, {
+    BlogID,
+    type: 'visit'
+  });
 
-  const putDataRes = await dynamoDb
+  await dynamoDb
     .put({
       TableName: BlogTableName,
       Item: {
@@ -99,9 +88,6 @@ export const visitBlog = async (event, context) => {
     .promise();
 
   return wrapResData({ clientIP, Message: "Add Visited." });
-  // const queryData = await dynamoDb
-  //   .scan(params)
-  //   .promise();
 };
 
 export const getLikesByTitles = async (event, context) => {
@@ -165,9 +151,14 @@ export const likeBlog = async (event, context) => {
       Message: "Liked"
     });
   }
+  // 更新该文章的 visitor 统计
+  updateStatisticsItem(dynamoDb, {
+    BlogID,
+    type: 'like'
+  });
 
   // 如果该 IP 没有点了 like，则进入 like 流程
-  const putDataRes = await dynamoDb
+  await dynamoDb
     .put({
       TableName: BlogTableName,
       Item: {

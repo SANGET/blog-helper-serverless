@@ -4,6 +4,8 @@
   "description": "blog services for alex's blog",
   "scripts": {
     "setup": "sls dynamodb install",
+    "deploy:funcs": "sh ./deploy-funcs.sh",
+    "deploy:all": "sls deploy --stage production",
     "start:db": "sls dynamodb start",
     "dev": "NODE_ENV=development sls offline"
   },
@@ -22,7 +24,7 @@
     "eslint-config-airbnb": "^18.0.1",
     "eslint-plugin-import": "^2.19.1",
     "serverless-dynamodb-local": "0.2.38",
-    "serverless-offline": "^6.0.0-alpha.60",
+    "serverless-offline": "^5.12.1",
     "serverless-plugin-typescript": "^1.1.9",
     "typescript": "^3.7.4"
   }
