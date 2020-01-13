@@ -74,7 +74,6 @@ export const visitBlog = async (event, context) => {
 
 
   // 确保已创建统计 item
-  await createStatisticsItem(dynamoDb);
   updateStatisticsItem(dynamoDb, {
     BlogID,
     type: 'visit'

@@ -1,4 +1,4 @@
-const createParams = {
+const blogStateTableParams = {
   TableName: 'BlogState',
   // The type of of schema.  Must start with a HASH type, with an optional second RANGE.
   KeySchema: [
@@ -53,7 +53,7 @@ const createParams = {
     },
   ],
 };
-dynamodb.createTable(createParams, (err, data) => {
+dynamodb.createTable(blogStateTableParams, (err, data) => {
   if (err) ppJson(err); // an error occurred
   else ppJson(data); // successful response
 });

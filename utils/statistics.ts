@@ -8,15 +8,16 @@ import { BlogTableName } from "./connect-db";
  */
 interface BlogStatisticsDataStruct {
   // hash key
-  ID: 'BlogStatistics';
+  ID: 'BlogID_Visit_Statistics';
   // range key
-  BlogID: 'BlogStatistics';
-  VisitorCount: {
-    [blogID: string]: number;
-  };
-  LikeCount: {
-    [blogID: string]: number;
-  };
+  BlogID: string;
+  Total: number;
+  // VisitorCount: {
+  //   [blogID: string]: number;
+  // };
+  // LikeCount: {
+  //   [blogID: string]: number;
+  // };
 }
 
 let hasStatisticsItemCache = false;
@@ -82,6 +83,7 @@ export const updateStatisticsItem = (
   updateParams: UpdateParams
 ) => {
   return new Promise(async (resolve, reject) => {
+    await createStatisticsItem(dynamoDb);
     const queryRes = await getStatisticItem(dynamoDb);
     const { BlogID, type } = updateParams;
     const statisticsItem = (queryRes.Items || [])[0];
