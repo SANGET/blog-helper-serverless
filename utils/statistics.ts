@@ -24,8 +24,8 @@ const statisticsItemCache = {
 
 };
 
-interface StatisticsParams {
-  BlogID: number;
+export interface StatisticsParams {
+  BlogID: string;
   type: 'like' | 'visit';
 }
 

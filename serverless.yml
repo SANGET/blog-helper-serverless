@@ -68,6 +68,7 @@ provider:
 #  exclude:
 #    - exclude-me.js
 #    - exclude-me-dir/**
+excludeDevDependencies: true
 
 functions:
   initDB:
@@ -94,12 +95,12 @@ functions:
       - http:
           path: likes
           method: post
-  getVisitors:
-    handler: handler.getVisitors
+  getVisitorsByTitles:
+    handler: handler.getVisitorsByTitles
     events:
       - http:
           path: visitors
-          method: get
+          method: post
 #    The following are a few example events you can configure
 #    NOTE: Please make sure to change your handler code to work with those events
 #    Check the event documentation for details

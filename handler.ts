@@ -1,6 +1,3 @@
-// const AWS = require('aws-sdk');
-// import * as AWS from 'aws-sdk';
-
 import {
   parseBody, genBlogID, getClientIPAndFP, genBlogStorage
 } from './utils/helpers';
@@ -9,24 +6,39 @@ import { BlogActionTypes, BlogStatisticsID } from './utils/constant';
 
 import { initDB as internalInitDB } from './utils/init-db';
 import { createStatisticsItem, updateStatisticsItem } from './utils/statistics';
+import { countItems, wrapBatchGetItemCondition } from './utils/counter';
+
+interface QueryItemCondition {
+  blogTitle: string;
+  blogTitles: string[];
+}
 
 export const initDB = internalInitDB;
 
 const uuidv4 = require('uuid/v4');
 
-const getLikeByBlogID = () => {
-  return null;
-};
-
-const wrapResData = (resData, header = {}, status = 200) => {
+const wrapResData = (resData, headers = {}, status = 200) => {
   return {
     statusCode: status,
     headers: {
       "Access-Control-Allow-Origin": "*",
-      ...header
+      ...headers
     },
     body: JSON.stringify(resData),
   };
+};
+
+/**
+ * 获取统计数据的 factory
+ */
+export const getCounterFac = async (event, type) => {
+  const dynamoDb = connectDB();
+  const eventBody = parseBody<QueryItemCondition>(event);
+  const { blogTitles } = eventBody;
+  const batchGetItemCondition = wrapBatchGetItemCondition(blogTitles, type, dynamoDb);
+  const counterRes = await Promise.all(batchGetItemCondition);
+
+  return wrapResData(counterRes);
 };
 
 export const visitBlog = async (event, context) => {
@@ -64,7 +76,7 @@ export const visitBlog = async (event, context) => {
 
   if (!!Count && Count > 0) {
     return wrapResData({
-      Message: 'Visited.'
+      Message: 'You visited already'
     });
   }
   // 更新该文章的 visitor 统计
@@ -87,47 +99,18 @@ export const visitBlog = async (event, context) => {
     })
     .promise();
 
-  return wrapResData({ clientIP, Message: "Add Visited." });
+  return wrapResData({ clientIP, Message: "Visited success" });
 };
 
-export const getLikesByTitles = async (event, context) => {
-  const dynamoDb = connectDB();
-  const eventBody = parseBody(event);
-  const { blogTitles } = eventBody;
-  let _blogTitles = blogTitles;
-
-  if (!Array.isArray(blogTitles)) {
-    _blogTitles = [blogTitles];
-  }
-
-  _blogTitles = _blogTitles.filter((item) => !!item);
-
-  const params = {
-    TableName: BlogTableName,
-    IndexName: BlogTableIndex,
-    KeyConditions: {
-      BlogID: {
-        ComparisonOperator: 'EQ',
-        AttributeValueList: _blogTitles.map((title) => genBlogID(title))
-      }
-    }
-  };
-
-  const queryData = await dynamoDb
-    .query(params)
-    .promise();
-  const { Items, Count } = queryData || {};
-  const result = {
-    Count,
-  };
-
-  return wrapResData(result);
+export const getVisitorsByTitles = async (event, context) => {
+  const res = await getCounterFac(event, 'visit');
+  return res;
 };
 
 export const likeBlog = async (event, context) => {
   const dynamoDb = connectDB();
   const { ip: clientIP } = getClientIPAndFP(event);
-  const eventBody = parseBody(event);
+  const eventBody = parseBody<QueryItemCondition>(event);
   const { blogTitle } = eventBody;
   const BlogID = genBlogID(blogTitle);
   // return wrapResData({ blogTitle, BlogID });
@@ -148,7 +131,7 @@ export const likeBlog = async (event, context) => {
   if (!!Count && Count > 0) {
     // 如果该 IP 已经点了 like，则直接返回
     return wrapResData({
-      Message: "Liked"
+      Message: "You liked already."
     });
   }
   // 更新该文章的 visitor 统计
@@ -172,5 +155,10 @@ export const likeBlog = async (event, context) => {
     })
     .promise();
 
-  return wrapResData({ clientIP, Message: "Liked" });
+  return wrapResData({ clientIP, Message: "Liked success" });
+};
+
+export const getLikesByTitles = async (event, context) => {
+  const res = await getCounterFac(event, 'like');
+  return res;
 };

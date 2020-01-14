@@ -12,7 +12,6 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "aws-sdk": "^2.598.0",
     "uuid": "^3.3.3"
   },
   "devDependencies": {
@@ -20,6 +19,7 @@
     "@types/uuid": "^3.4.6",
     "@typescript-eslint/eslint-plugin": "^2.7.0",
     "@typescript-eslint/parser": "^2.7.0",
+    "aws-sdk": "^2.598.0",
     "eslint": "^6.8.0",
     "eslint-config-airbnb": "^18.0.1",
     "eslint-plugin-import": "^2.19.1",

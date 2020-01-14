@@ -2,8 +2,8 @@ import { BlogNamespace } from "./constant";
 
 const uuidv5 = require('uuid/v5');
 
-export const parseBody = (event) => {
-  let res = {};
+export const parseBody = <T = {}>(event): T => {
+  let res;
   try {
     res = JSON.parse(event.body);
   } catch (e) {
