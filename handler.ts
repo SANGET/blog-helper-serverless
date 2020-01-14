@@ -2,11 +2,11 @@ import {
   parseBody, genBlogID, getClientIPAndFP, genBlogStorage
 } from './utils/helpers';
 import { connectDB, BlogTableName, BlogTableIndex } from './utils/connect-db';
-import { BlogActionTypes, BlogStatisticsID } from './utils/constant';
+import { BlogActionTypes } from './utils/constant';
 
-import { initDB as internalInitDB } from './utils/init-db';
-import { createStatisticsItem, updateStatisticsItem } from './utils/statistics';
-import { countItems, wrapBatchGetItemCondition } from './utils/counter';
+import internalInitDB from './utils/init-db';
+import { updateStatisticsItem } from './utils/statistics';
+import { wrapBatchGetItemCondition } from './utils/counter';
 
 interface QueryItemCondition {
   blogTitle: string;
