@@ -41,20 +41,31 @@ provider:
 # you can overwrite defaults here
 
 # you can add statements to the Lambda function's IAM Role here
-#  iamRoleStatements:
-#    - Effect: "Allow"
-#      Action:
-#        - "s3:ListBucket"
-#      Resource: { "Fn::Join" : ["", ["arn:aws:s3:::", { "Ref" : "ServerlessDeploymentBucket" } ] ]  }
-#    - Effect: "Allow"
-#      Action:
-#        - "s3:PutObject"
-#      Resource:
-#        Fn::Join:
-#          - ""
-#          - - "arn:aws:s3:::"
-#            - "Ref" : "ServerlessDeploymentBucket"
-#            - "/*"
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamodb:Query
+        - dynamodb:Scan
+        - dynamodb:GetItem
+        - dynamodb:PutItem
+        - dynamodb:UpdateItem
+        - dynamodb:DeleteItem
+        - dynamodb:CreateTable
+        - dynamodb:ListTables
+      Resource: "arn:aws:dynamodb:ap-northeast-1:*:*"
+    # - Effect: "Allow"
+    #   Action:
+    #     - "s3:ListBucket"
+    #   Resource: { "Fn::Join" : ["", ["arn:aws:s3:::", { "Ref" : "ServerlessDeploymentBucket" } ] ]  }
+    # - Effect: "Allow"
+    #   Action:
+    #     - "s3:PutObject"
+    #   Resource:
+    #     Fn::Join:
+    #       - ""
+    #       - - "arn:aws:s3:::"
+    #         - "Ref" : "ServerlessDeploymentBucket"
+    #         - "/*"
 
 # you can define service wide environment variables here
 #  environment:

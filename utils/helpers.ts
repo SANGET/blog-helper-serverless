@@ -27,3 +27,14 @@ export const getClientIPAndFP = (event) => {
     ip: clientIP
   };
 };
+
+export const wrapResData = (resData, headers = {}, status = 200) => {
+  return {
+    statusCode: status,
+    headers: {
+      "Access-Control-Allow-Origin": "*",
+      ...headers
+    },
+    body: JSON.stringify(resData),
+  };
+};

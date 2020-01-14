@@ -1,5 +1,5 @@
 import {
-  parseBody, genBlogID, getClientIPAndFP, genBlogStorage
+  parseBody, genBlogID, getClientIPAndFP, genBlogStorage, wrapResData
 } from './utils/helpers';
 import { connectDB, BlogTableName, BlogTableIndex } from './utils/connect-db';
 import { BlogActionTypes } from './utils/constant';
@@ -16,17 +16,6 @@ interface QueryItemCondition {
 export const initDB = internalInitDB;
 
 const uuidv4 = require('uuid/v4');
-
-const wrapResData = (resData, headers = {}, status = 200) => {
-  return {
-    statusCode: status,
-    headers: {
-      "Access-Control-Allow-Origin": "*",
-      ...headers
-    },
-    body: JSON.stringify(resData),
-  };
-};
 
 /**
  * 获取统计数据的 factory
