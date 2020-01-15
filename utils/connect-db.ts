@@ -11,4 +11,4 @@ export const connectDB = () => {
 };
 
 export const BlogTableName = 'BlogState';
-export const BlogTableIndex = 'BlogIPIndex';
+export const BlogTableIndex = 'BlogFingerprintIndex';

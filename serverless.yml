@@ -93,7 +93,7 @@ functions:
     events:
       - http:
           path: like
-          method: post
+          method: get
   visitBlog:
     handler: handler.visitBlog
     events:
@@ -112,6 +112,19 @@ functions:
       - http:
           path: visitors
           method: post
+  # getLikesByTitle:
+  #   handler: handler.getLikesByTitle
+  #   events:
+  #     - http:
+  #         path: like
+  #         method: get
+  # getVisitorsByTitle:
+  #   handler: handler.getVisitorsByTitle
+  #   events:
+  #     - http:
+  #         path: visitor
+  #         method: get
+  
 #    The following are a few example events you can configure
 #    NOTE: Please make sure to change your handler code to work with those events
 #    Check the event documentation for details

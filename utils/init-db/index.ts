@@ -13,18 +13,20 @@ const initDB = async () => {
     try {
       actionRes = await dynamodb.createTable(createTableParams).promise();
       return wrapResData({
-        Message: 'Create table success',
-        ActionRes: actionRes
+        msg: 'Create table success',
+        resData: actionRes,
+        status: 201
       });
     } catch (e) {
       return wrapResData({
-        Message: 'Create table faild',
-        ActionRes: actionRes
-      }, {}, 500);
+        msg: 'Create table faild',
+        resData: actionRes,
+        status: 500
+      }, {});
     }
   }
   return wrapResData({
-    Message: 'Table exist'
+    msg: 'Table exist',
   });
 };
 

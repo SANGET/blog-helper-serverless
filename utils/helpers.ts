@@ -1,4 +1,4 @@
-import { BlogNamespace } from "./constant";
+import { BlogNamespace, FingerprintNamespace } from "./constant";
 
 const uuidv5 = require('uuid/v5');
 
@@ -28,13 +28,49 @@ export const getClientIPAndFP = (event) => {
   };
 };
 
-export const wrapResData = (resData, headers = {}, status = 200) => {
+/**
+ * 基于 ip 和 type 生成 item 的指纹
+ */
+export const genFingerprint = ({
+  ip,
+  type
+}) => {
+  return uuidv5(`${ip}_${type}`, FingerprintNamespace);
+};
+
+const errorMap = {
+  401: 'unauthorized',
+  403: 'forbidden',
+  404: 'not found',
+};
+
+/**
+ * 统一 response 接口
+ */
+export const wrapResData = ({
+  resData = {},
+  msg = '',
+  status = 200
+}, headers = {}) => {
+  let resBody = {};
+  if (status < 300 && resData) {
+    resBody = {
+      data: resData,
+    };
+  } else {
+    resBody = {
+      error: msg || errorMap[status] || 'unknow error',
+    };
+  }
+  Object.assign(resBody, msg && {
+    message: msg
+  });
   return {
     statusCode: status,
     headers: {
       "Access-Control-Allow-Origin": "*",
       ...headers
     },
-    body: JSON.stringify(resData),
+    body: JSON.stringify(resBody),
   };
 };

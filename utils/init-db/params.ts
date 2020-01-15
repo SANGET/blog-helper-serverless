@@ -1,4 +1,4 @@
-import { BlogTableName } from "../connect-db";
+import { BlogTableName, BlogTableIndex } from "../connect-db";
 
 export const createTableParams = {
   TableName: BlogTableName,
@@ -24,7 +24,7 @@ export const createTableParams = {
       AttributeType: 'S', // (S | N | B) for string, number, binary
     },
     {
-      AttributeName: 'IP',
+      AttributeName: 'Fingerprint',
       AttributeType: 'S', // (S | N | B) for string, number, binary
     },
   ],
@@ -34,14 +34,14 @@ export const createTableParams = {
   },
   GlobalSecondaryIndexes: [ // optional (list of LocalSecondaryIndex)
     {
-      IndexName: 'BlogIPIndex',
+      IndexName: BlogTableIndex,
       KeySchema: [
         { // Required HASH type attribute - must match the table's HASH key attribute name
           AttributeName: 'BlogID',
           KeyType: 'HASH',
         },
         {
-          AttributeName: 'IP',
+          AttributeName: 'Fingerprint',
           KeyType: 'RANGE',
         },
       ],

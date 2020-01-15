@@ -22,7 +22,7 @@ const blogStateTableParams = {
       AttributeType: 'S', // (S | N | B) for string, number, binary
     },
     {
-      AttributeName: 'IP',
+      AttributeName: 'Fingerprint',
       AttributeType: 'S', // (S | N | B) for string, number, binary
     },
   ],
@@ -32,14 +32,14 @@ const blogStateTableParams = {
   },
   GlobalSecondaryIndexes: [ // optional (list of LocalSecondaryIndex)
     {
-      IndexName: 'BlogIPIndex',
+      IndexName: 'BlogFingerprintIndex',
       KeySchema: [
         { // Required HASH type attribute - must match the table's HASH key attribute name
           AttributeName: 'BlogID',
           KeyType: 'HASH',
         },
         {
-          AttributeName: 'IP',
+          AttributeName: 'Fingerprint',
           KeyType: 'RANGE',
         },
       ],
