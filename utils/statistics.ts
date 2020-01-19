@@ -2,6 +2,7 @@
 /* eslint-disable no-async-promise-executor */
 import { BlogStatisticsID } from "./constant";
 import { BlogTableName } from "./connect-db";
+import { HelperType } from "./types";
 
 /**
  * 统计 item 的数据结构
@@ -26,7 +27,7 @@ const statisticsItemCache = {
 
 export interface StatisticsParams {
   BlogID: string;
-  type: 'like' | 'visit';
+  type: HelperType;
 }
 
 export const getStatisticItem = (
@@ -114,7 +115,7 @@ export const updateStatisticsItem = (
       },
       ReturnValues: "UPDATED_NEW"
     }, (err, data) => {
-      console.log(err, data);
+      console.log('update statictics', err, data);
     });
   });
 };

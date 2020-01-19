@@ -1,6 +1,7 @@
-import { BlogTableName, BlogTableIndex } from "./connect-db";
-import { wrapStatisticsItemID, StatisticsParams } from "./statistics";
-import { genBlogID } from "./helpers";
+import { BlogTableName, BlogTableIndex, connectDB } from "../connect-db";
+import { wrapStatisticsItemID, StatisticsParams } from "../statistics";
+import { genBlogID } from "../helpers";
+import { HelperType } from "../types";
 
 export const countItems = async (
   dynamoDb: AWS.DynamoDB.DocumentClient,
@@ -23,9 +24,11 @@ export const countItems = async (
 };
 
 export const wrapBatchGetItemCondition = (
-  blogTitles,
-  type: StatisticsParams['type'],
-  dynamoDb: AWS.DynamoDB.DocumentClient
+  dynamoDb: AWS.DynamoDB.DocumentClient,
+  {
+    blogTitles,
+    type
+  },
 ) => {
   let _blogTitles = blogTitles;
 

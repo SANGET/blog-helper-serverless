@@ -3,5 +3,7 @@
 ## Like
 
 - [x] put like item
-- [ ] query like by blog titles
-- [ ] get like count by blog title
+- [x] query like by blog titles
+- [x] get like count by blog title
+- [ ] cancel like
+- [ ] fingerprint

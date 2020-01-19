@@ -1,4 +1,4 @@
-import { BlogTableName, BlogTableIndex } from "../connect-db";
+import { BlogTableName, BlogTableIndex } from "../../connect-db";
 
 export const createTableParams = {
   TableName: BlogTableName,

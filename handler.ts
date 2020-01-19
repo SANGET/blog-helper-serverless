@@ -1,13 +1,8 @@
-import internalInitDB from './utils/init-db';
+import internalInitDB from './utils/apis/init-db';
 import { VisitBlog, GetVisitorsByTitles } from './utils/apis/visitor';
 import { resolveGetParams, resolvePostParams } from './utils/resolve-params';
 import { LikeBlog, GetLikesByTitles } from './utils/apis/like';
 import { wrapResData } from './utils/helpers';
-
-interface QueryItemCondition {
-  blogTitle: string;
-  blogTitles: string[];
-}
 
 const handleParamsErr = (paramName) => {
   return wrapResData({
@@ -18,7 +13,7 @@ const handleParamsErr = (paramName) => {
 
 export const initDB = internalInitDB;
 export const likeBlog = async (event, context) => {
-  const { body, clientIP } = resolveGetParams(event);
+  const { body, clientIP, fingerprint } = resolveGetParams(event);
   const { blogTitle } = body;
 
   if (!blogTitle) {
@@ -27,13 +22,14 @@ export const likeBlog = async (event, context) => {
 
   const res = await LikeBlog({
     blogTitle,
+    fingerprint,
     clientIP
   });
 
   return res;
 };
 export const visitBlog = async (event, context) => {
-  const { body, clientIP } = resolveGetParams(event);
+  const { body, clientIP, fingerprint } = resolveGetParams(event);
   const { blogTitle } = body;
 
   if (!blogTitle) {
@@ -42,32 +38,33 @@ export const visitBlog = async (event, context) => {
 
   const res = await VisitBlog({
     blogTitle,
+    fingerprint,
     clientIP
   });
 
   return res;
 };
 export const getLikesByTitles = async (event, context) => {
-  const { body } = resolvePostParams(event);
-  const { blogTitles } = body;
+  const { body, fingerprint } = resolvePostParams(event);
+  const { blogTitles, detail = false } = body;
 
   if (!blogTitles) {
     return handleParamsErr('blogTitles[]');
   }
 
-  const res = await GetLikesByTitles(blogTitles);
+  const res = await GetLikesByTitles(blogTitles, fingerprint, detail);
 
   return res;
 };
 export const getVisitorsByTitles = async (event, context) => {
-  const { body } = resolvePostParams(event);
-  const { blogTitles } = body;
+  const { body, fingerprint } = resolvePostParams(event);
+  const { blogTitles, detail = false } = body;
 
   if (!blogTitles) {
     return handleParamsErr('blogTitles[]');
   }
 
-  const res = await GetVisitorsByTitles(blogTitles);
+  const res = await GetVisitorsByTitles(blogTitles, fingerprint, detail);
 
   return res;
 };

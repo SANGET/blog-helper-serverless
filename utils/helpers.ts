@@ -32,10 +32,12 @@ export const getClientIPAndFP = (event) => {
  * 基于 ip 和 type 生成 item 的指纹
  */
 export const genFingerprint = ({
-  ip,
+  fingerprint = '',
+  ip = '',
   type
 }) => {
-  return uuidv5(`${ip}_${type}`, FingerprintNamespace);
+  const id = fingerprint || ip;
+  return uuidv5(`${id}_${type}`, FingerprintNamespace);
 };
 
 const errorMap = {

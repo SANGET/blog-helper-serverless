@@ -1,9 +1,9 @@
 /* eslint-disable import/no-extraneous-dependencies */
 /* eslint-disable no-async-promise-executor */
 import * as AWS from 'aws-sdk';
-import { dbConnection, BlogTableName } from '../connect-db';
+import { dbConnection, BlogTableName } from '../../connect-db';
 import { createTableParams } from './params';
-import { wrapResData } from '../helpers';
+import { wrapResData } from '../../helpers';
 
 const initDB = async () => {
   const dynamodb = new AWS.DynamoDB({ apiVersion: '2012-08-10', ...dbConnection });
