@@ -124,7 +124,7 @@ export const genAddFac = async (options) => {
       TableName: BlogTableName,
       Item: {
         ID: uuidv4(),
-        Type: BlogActionTypes.like,
+        Type: BlogActionTypes[type],
         BlogID,
         IP: clientIP,
         Fingerprint: fingerprintFinal,
@@ -140,7 +140,9 @@ export const genAddFac = async (options) => {
   });
 
   return wrapResData({
-    resData: { clientIP },
+    resData: {
+      fingerprint: fingerprintFinal
+    },
     msg: `${type} success`
   });
 };
