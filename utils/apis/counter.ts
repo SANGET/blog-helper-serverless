@@ -1,7 +1,8 @@
-import { BlogTableName, BlogTableIndex, connectDB } from "../connect-db";
+import {
+  BlogStatisticsTableName
+} from "../connect-db";
 import { wrapStatisticsItemID, StatisticsParams } from "../statistics";
 import { genBlogID } from "../helpers";
-import { HelperType } from "../types";
 
 export const countItems = async (
   dynamoDb: AWS.DynamoDB.DocumentClient,
@@ -11,10 +12,9 @@ export const countItems = async (
 
   const queryData = await dynamoDb
     .get({
-      TableName: BlogTableName,
+      TableName: BlogStatisticsTableName,
       Key: {
         ID: itemID,
-        BlogID: params.BlogID
       }
     })
     .promise();

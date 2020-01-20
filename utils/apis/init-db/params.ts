@@ -1,6 +1,6 @@
-import { BlogTableName, BlogTableIndex } from "../../connect-db";
+import { BlogTableName, BlogTableIndex, BlogStatisticsTableName } from "../../connect-db";
 
-export const createTableParams = {
+export const blogStateTableParams = {
   TableName: BlogTableName,
   // The type of of schema.  Must start with a HASH type, with an optional second RANGE.
   KeySchema: [
@@ -54,4 +54,24 @@ export const createTableParams = {
       },
     },
   ],
+};
+
+export const statisticsTableParams = {
+  TableName: BlogStatisticsTableName,
+  KeySchema: [
+    {
+      AttributeName: 'ID',
+      KeyType: 'HASH',
+    },
+  ],
+  AttributeDefinitions: [
+    {
+      AttributeName: 'ID',
+      AttributeType: 'S', // (S | N | B) for string, number, binary
+    },
+  ],
+  ProvisionedThroughput: { // required provisioned throughput for the table
+    ReadCapacityUnits: 3,
+    WriteCapacityUnits: 3,
+  },
 };

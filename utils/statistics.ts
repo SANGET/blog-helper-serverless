@@ -1,7 +1,7 @@
 /* eslint-disable default-case */
 /* eslint-disable no-async-promise-executor */
 import { BlogStatisticsID } from "./constant";
-import { BlogTableName } from "./connect-db";
+import { BlogStatisticsTableName } from "./connect-db";
 import { HelperType } from "./types";
 
 /**
@@ -33,16 +33,13 @@ export interface StatisticsParams {
 export const getStatisticItem = (
   dynamoDb: AWS.DynamoDB.DocumentClient,
   itemID: string
-): Promise<AWS.DynamoDB.DocumentClient.QueryOutput> => {
+): Promise<AWS.DynamoDB.DocumentClient.GetItemOutput> => {
   return new Promise((resolve, reject) => {
     dynamoDb
-      .query({
-        TableName: BlogTableName,
-        KeyConditions: {
-          ID: {
-            ComparisonOperator: 'EQ',
-            AttributeValueList: [itemID]
-          }
+      .get({
+        TableName: BlogStatisticsTableName,
+        Key: {
+          ID: itemID
         }
       }, (err, data) => {
         resolve(data);
@@ -56,23 +53,24 @@ export const wrapStatisticsItemID = (params: StatisticsParams) => {
 
 export const createStatisticsItem = (
   dynamoDb: AWS.DynamoDB.DocumentClient,
-  params: StatisticsParams
+  params: {
+    itemID: string;
+    type: string;
+  }
 ): Promise<{msg: string}> => {
   return new Promise(async (resolve, reject) => {
-    const { BlogID } = params;
-    const itemID = wrapStatisticsItemID(params);
+    const { itemID } = params;
     const hasCache = !!statisticsItemCache[itemID];
     if (hasCache) {
       resolve({ msg: 'Done' });
     } else {
-      const queryRes = await getStatisticItem(dynamoDb, itemID);
-      if (queryRes.Count === 0) {
+      const { Item } = await getStatisticItem(dynamoDb, itemID);
+      if (!Item) {
         // 如果没有统计 item，则创建一个
         dynamoDb.put({
-          TableName: BlogTableName,
+          TableName: BlogStatisticsTableName,
           Item: {
             ID: itemID,
-            BlogID,
             Counter: 0
           },
         }, (putErr, putRes) => {
@@ -97,14 +95,14 @@ export const updateStatisticsItem = (
   params: StatisticsParams
 ) => {
   return new Promise(async (resolve, reject) => {
-    await createStatisticsItem(dynamoDb, params);
-    const { BlogID, type } = params;
     const itemID = wrapStatisticsItemID(params);
+    const createRes = await createStatisticsItem(dynamoDb, {
+      itemID, type: params.type
+    });
     dynamoDb.update({
-      TableName: BlogTableName,
+      TableName: BlogStatisticsTableName,
       Key: {
         ID: itemID,
-        BlogID
       },
       UpdateExpression: `SET #c = #c + :increase`,
       ExpressionAttributeNames: {
@@ -116,6 +114,7 @@ export const updateStatisticsItem = (
       ReturnValues: "UPDATED_NEW"
     }, (err, data) => {
       console.log('update statictics', err, data);
+      resolve(data);
     });
   });
 };

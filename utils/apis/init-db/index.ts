@@ -2,7 +2,7 @@
 /* eslint-disable no-async-promise-executor */
 import * as AWS from 'aws-sdk';
 import { dbConnection, BlogTableName } from '../../connect-db';
-import { createTableParams } from './params';
+import { blogStateTableParams, statisticsTableParams } from './params';
 import { wrapResData } from '../../helpers';
 
 const initDB = async () => {
@@ -11,7 +11,10 @@ const initDB = async () => {
   if (TableNames.indexOf(BlogTableName) === -1) {
     let actionRes;
     try {
-      actionRes = await dynamodb.createTable(createTableParams).promise();
+      actionRes = await Promise.all([
+        dynamodb.createTable(blogStateTableParams).promise(),
+        dynamodb.createTable(statisticsTableParams).promise(),
+      ]);
       return wrapResData({
         msg: 'Create table success',
         resData: actionRes,

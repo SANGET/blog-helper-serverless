@@ -115,6 +115,9 @@ export const genAddFac = async (options) => {
     // 如果该 IP 已经点了 like，则直接返回
     return wrapResData({
       msg: `You ${type} already.`,
+      resData: {
+        counter: Count
+      }
     });
   }
 
@@ -127,13 +130,15 @@ export const genAddFac = async (options) => {
         Type: BlogActionTypes[type],
         BlogID,
         IP: clientIP,
+        FP: fingerprint,
         Fingerprint: fingerprintFinal,
         ActionDate: Date.now(),
         Title: Buffer.from(blogTitle).toString('base64')
       }
     })
     .promise();
-  // 更新该文章的 visitor 统计
+
+  // 统计
   updateStatisticsItem(dynamoDb, {
     BlogID,
     type

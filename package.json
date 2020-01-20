@@ -5,7 +5,7 @@
   "scripts": {
     "setup": "sls dynamodb install",
     "deploy:funcs": "sh ./deploy-funcs.sh",
-    "deploy:all": "sls deploy --stage production",
+    "deploy:all": "sls deploy --stage prod",
     "start:db": "sls dynamodb start",
     "dev": "NODE_ENV=development sls offline"
   },

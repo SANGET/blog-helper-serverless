@@ -88,30 +88,70 @@ functions:
       - http:
           path: __init_db__
           method: get
+          cors:
+            origin: '*'
+            headers:
+              - Content-Type
+              - Access-Control-Allow-Headers
+              - Access-Control-Allow-Origin
+              - FP
+            allowCredentials: false
   likeBlog:
     handler: handler.likeBlog
     events:
       - http:
           path: like
           method: get
+          cors:
+            origin: '*'
+            headers:
+              - Content-Type
+              - Access-Control-Allow-Headers
+              - Access-Control-Allow-Origin
+              - FP
+            allowCredentials: false
   visitBlog:
     handler: handler.visitBlog
     events:
       - http:
           path: visit
           method: get
+          cors:
+            origin: '*'
+            headers:
+              - Content-Type
+              - Access-Control-Allow-Headers
+              - Access-Control-Allow-Origin
+              - FP
+            allowCredentials: false
   getLikesByTitles:
     handler: handler.getLikesByTitles
     events:
       - http:
           path: likes
           method: post
+          cors:
+            origin: '*'
+            headers:
+              - Content-Type
+              - Access-Control-Allow-Headers
+              - Access-Control-Allow-Origin
+              - FP
+            allowCredentials: false
   getVisitorsByTitles:
     handler: handler.getVisitorsByTitles
     events:
       - http:
           path: visitors
           method: post
+          cors:
+            origin: '*'
+            headers:
+              - Content-Type
+              - Access-Control-Allow-Headers
+              - Access-Control-Allow-Origin
+              - FP
+            allowCredentials: false
   # getLikesByTitle:
   #   handler: handler.getLikesByTitle
   #   events:

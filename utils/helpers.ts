@@ -70,6 +70,7 @@ export const wrapResData = ({
   return {
     statusCode: status,
     headers: {
+      // "Access-Control-Allow-Headers": "content-type,origin,FP",
       "Access-Control-Allow-Origin": "*",
       ...headers
     },

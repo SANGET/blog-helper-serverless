@@ -1,3 +1,4 @@
+/* eslint-disable import/no-extraneous-dependencies */
 import { DocumentClient } from 'aws-sdk/clients/dynamodb';
 
 const isDev = process.env.NODE_ENV === 'development';
@@ -11,4 +12,5 @@ export const connectDB = () => {
 };
 
 export const BlogTableName = 'BlogState';
+export const BlogStatisticsTableName = 'BlogStatistics';
 export const BlogTableIndex = 'BlogFingerprintIndex';
