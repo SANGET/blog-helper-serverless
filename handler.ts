@@ -54,7 +54,9 @@ export const getLikesByTitles = async (event, context) => {
 
   const res = await GetLikesByTitles(blogTitles, fingerprint, detail);
 
-  return res;
+  return wrapResData({
+    resData: res
+  });
 };
 export const getVisitorsByTitles = async (event, context) => {
   const { body, fingerprint } = resolvePostParams(event);
@@ -66,5 +68,7 @@ export const getVisitorsByTitles = async (event, context) => {
 
   const res = await GetVisitorsByTitles(blogTitles, fingerprint, detail);
 
-  return res;
+  return wrapResData({
+    resData: res
+  });
 };

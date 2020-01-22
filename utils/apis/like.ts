@@ -1,17 +1,16 @@
-import { getCounterFac, genAddFac } from './fac';
+import { getCounterFac, genAddItemFac } from './fac';
 
 export const LikeBlog = async ({
   blogTitle,
   fingerprint,
   clientIP
 }) => {
-  const res = await genAddFac({
+  return genAddItemFac({
     blogTitle,
     fingerprint,
     clientIP,
     type: 'like'
   });
-  return res;
 };
 
 export const GetLikesByTitles = async (
@@ -19,8 +18,7 @@ export const GetLikesByTitles = async (
   fingerprint: string,
   detail: boolean
 ) => {
-  const res = await getCounterFac({
+  return getCounterFac({
     blogTitles, type: 'like', fingerprint, detail
   });
-  return res;
 };

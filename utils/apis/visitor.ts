@@ -1,11 +1,11 @@
-import { getCounterFac, genAddFac } from './fac';
+import { getCounterFac, genAddItemFac } from './fac';
 
 export const VisitBlog = async ({
   clientIP,
   fingerprint,
   blogTitle
 }) => {
-  const res = await genAddFac({
+  const res = await genAddItemFac({
     blogTitle,
     fingerprint,
     clientIP,

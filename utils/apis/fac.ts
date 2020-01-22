@@ -1,3 +1,6 @@
+/* eslint-disable import/no-extraneous-dependencies */
+/* eslint-disable no-async-promise-executor */
+import { DocumentClient } from "aws-sdk/clients/dynamodb";
 import { connectDB, BlogTableName, BlogTableIndex } from "../connect-db";
 import { wrapResData, genBlogID, genFingerprint } from "../helpers";
 import { updateStatisticsItem } from "../statistics";
@@ -14,49 +17,59 @@ interface GetItemParams {
   type: HelperType;
 }
 
-const getItem = async (
+const getItem = (
   dynamoDb: AWS.DynamoDB.DocumentClient,
   {
     blogTitle,
     fingerprint,
     clientIP,
     type
-  }: GetItemParams) => {
-  const BlogID = genBlogID(blogTitle);
-  const fingerprintFinal = genFingerprint({
-    fingerprint,
-    ip: clientIP,
-    type
-  });
-  const queryData = await dynamoDb
-    .query({
-      TableName: BlogTableName,
-      IndexName: BlogTableIndex,
-      ProjectionExpression: '#T',
-      ExpressionAttributeNames: {
-        '#T': 'Type'
-      },
-      KeyConditions: {
-        BlogID: {
-          ComparisonOperator: 'EQ',
-          AttributeValueList: [BlogID]
+  }: GetItemParams
+) => {
+  return new Promise<{
+    resData: DocumentClient.QueryOutput;
+    BlogID: string;
+    fingerprintFinal: string;
+  }>(async (resolve, reject) => {
+    const BlogID = genBlogID(blogTitle);
+    const fingerprintFinal = genFingerprint({
+      fingerprint,
+      ip: clientIP,
+      type
+    });
+    dynamoDb
+      .query({
+        TableName: BlogTableName,
+        IndexName: BlogTableIndex,
+        ProjectionExpression: '#T',
+        ExpressionAttributeNames: {
+          '#T': 'Type'
         },
-        Fingerprint: {
-          ComparisonOperator: 'EQ',
-          AttributeValueList: [fingerprintFinal]
+        KeyConditions: {
+          BlogID: {
+            ComparisonOperator: 'EQ',
+            AttributeValueList: [BlogID]
+          },
+          Fingerprint: {
+            ComparisonOperator: 'EQ',
+            AttributeValueList: [fingerprintFinal]
+          }
         }
-      }
-    })
-    .promise();
-  return {
-    resData: queryData,
-    BlogID,
-    fingerprintFinal
-  };
+      })
+      .promise()
+      .then((queryData) => {
+        resolve({
+          resData: queryData,
+          BlogID,
+          fingerprintFinal
+        });
+      })
+      .catch(reject);
+  });
 };
 
 export const getDetailItem = async (
-  dynamoDb: AWS.DynamoDB.DocumentClient,
+  dynamoDb: DocumentClient,
   options: GetItemParams
 ) => {
   const { resData } = await getItem(dynamoDb, options);
@@ -67,39 +80,37 @@ export const getDetailItem = async (
 /**
  * 获取统计数据的 factory
  */
-export const getCounterFac = async ({
-  blogTitles, type, fingerprint, detail
+export const getCounterFac = ({
+  blogTitles, type, fingerprint, detail = false
 }) => {
-  if (!fingerprint) {
-    return wrapResData({
-      status: 400,
-      resData: {
-        msg: 'Need pass fingerprint'
-      }
-    });
-  }
-  const dynamoDb = connectDB();
-  const batchGetItemCondition = wrapBatchGetItemCondition(
-    dynamoDb,
-    { blogTitles, type },
-  );
-  let detailRes;
-  if (detail && fingerprint) {
-    detailRes = await getDetailItem(dynamoDb, {
-      fingerprint, blogTitle: blogTitles[0], type
-    });
-  }
-  const counterRes = await Promise.all(batchGetItemCondition);
+  return new Promise<{
+    counter: number;
+    detail: DocumentClient.AttributeMap | undefined;
+  }>(async (resolve, reject) => {
+    if (!fingerprint) {
+      return reject(new Error('Need pass fingerprint'));
+    }
+    const dynamoDb = connectDB();
+    const batchGetItemCondition = wrapBatchGetItemCondition(
+      dynamoDb,
+      { blogTitles, type },
+    );
+    let detailRes;
+    if (detail && fingerprint) {
+      detailRes = await getDetailItem(dynamoDb, {
+        fingerprint, blogTitle: blogTitles[0], type
+      });
+    }
+    const counterRes = await Promise.all(batchGetItemCondition);
 
-  return wrapResData({
-    resData: {
+    return resolve({
       counter: detail ? counterRes[0] : counterRes,
       detail: detailRes
-    }
+    });
   });
 };
 
-export const genAddFac = async (options) => {
+export const genAddItemFac = async (options) => {
   const {
     blogTitle,
     fingerprint,
@@ -112,12 +123,13 @@ export const genAddFac = async (options) => {
   const { Count } = resData || {};
 
   if (!!Count && Count > 0) {
-    // 如果该 IP 已经点了 like，则直接返回
+    // 如果该 FP 已经点了进行过操作，则返回统计数据
+    const res = await getCounterFac({
+      blogTitles: [blogTitle], type, fingerprint
+    });
     return wrapResData({
       msg: `You ${type} already.`,
-      resData: {
-        counter: Count
-      }
+      resData: res
     });
   }
 
@@ -168,7 +180,7 @@ export const genAddFac = async (options) => {
 
   return wrapResData({
     resData: {
-      fingerprint: fingerprintFinal,
+      // fingerprint: fingerprintFinal,
       counter: counter.Attributes.Counter
     },
     msg: `${type} success`
