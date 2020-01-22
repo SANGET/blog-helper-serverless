@@ -19,6 +19,7 @@ const statisticsItemCache = {};
 
 export interface StatisticsParams {
   BlogID: string;
+  blogTitle: string;
   type: HelperType;
 }
 
@@ -55,10 +56,11 @@ export const createStatisticsItem = (
   params: {
     itemID: string;
     type: string;
+    remark: string;
   }
 ): Promise<{msg: string}> => {
   return new Promise(async (resolve, reject) => {
-    const { itemID } = params;
+    const { itemID, remark } = params;
     const hasCache = !!statisticsItemCache[itemID];
     if (hasCache) {
       resolve({ msg: 'Record in cache list' });
@@ -71,6 +73,7 @@ export const createStatisticsItem = (
               TableName: BlogStatisticsTableName,
               Item: {
                 ID: itemID,
+                Remark: remark,
                 Counter: 0
               },
             })
@@ -111,7 +114,7 @@ export const updateStatisticsItem = (
     const itemID = wrapStatisticsItemID(params);
 
     createStatisticsItem(dynamoDb, {
-      itemID, type: params.type
+      itemID, type: params.type, remark: params.blogTitle
     })
       .then(() => {
         dynamoDb.update({

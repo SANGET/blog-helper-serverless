@@ -146,7 +146,7 @@ export const genAddItemFac = async (options) => {
           FP: fingerprint,
           Fingerprint: fingerprintFinal,
           ActionDate: Date.now(),
-          Title: Buffer.from(blogTitle).toString('base64')
+          Title: blogTitle
         }
       })
       .promise();
@@ -166,6 +166,7 @@ export const genAddItemFac = async (options) => {
   try {
     counter = await updateStatisticsItem(dynamoDb, {
       BlogID,
+      blogTitle,
       type
     });
   } catch (err) {
