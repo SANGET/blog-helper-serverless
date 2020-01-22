@@ -61,7 +61,7 @@ export const wrapResData = ({
     };
   } else {
     resBody = {
-      error: msg || errorMap[status] || 'unknow error',
+      error: errorMap[status] || resData || 'unknow error',
     };
   }
   Object.assign(resBody, msg && {

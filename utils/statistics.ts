@@ -13,22 +13,18 @@ interface BlogStatisticsDataStruct {
   // range key
   BlogID: string;
   Counter: number;
-  // VisitorCount: {
-  //   [blogID: string]: number;
-  // };
-  // LikeCount: {
-  //   [blogID: string]: number;
-  // };
 }
 
-const statisticsItemCache = {
-
-};
+const statisticsItemCache = {};
 
 export interface StatisticsParams {
   BlogID: string;
   type: HelperType;
 }
+
+export const wrapStatisticsItemID = (params: StatisticsParams) => {
+  return `${BlogStatisticsID}_${params.type}_${params.BlogID}`;
+};
 
 export const getStatisticItem = (
   dynamoDb: AWS.DynamoDB.DocumentClient,
@@ -41,14 +37,17 @@ export const getStatisticItem = (
         Key: {
           ID: itemID
         }
-      }, (err, data) => {
+      })
+      .promise()
+      .then((data) => {
+        console.log('get statistic item success', data);
         resolve(data);
+      })
+      .catch((err) => {
+        console.log('get statistic item error', err);
+        reject(err);
       });
   });
-};
-
-export const wrapStatisticsItemID = (params: StatisticsParams) => {
-  return `${BlogStatisticsID}_${params.type}_${params.BlogID}`;
 };
 
 export const createStatisticsItem = (
@@ -62,59 +61,79 @@ export const createStatisticsItem = (
     const { itemID } = params;
     const hasCache = !!statisticsItemCache[itemID];
     if (hasCache) {
-      resolve({ msg: 'Done' });
+      resolve({ msg: 'Record in cache list' });
     } else {
-      const { Item } = await getStatisticItem(dynamoDb, itemID);
-      if (!Item) {
-        // 如果没有统计 item，则创建一个
-        dynamoDb.put({
-          TableName: BlogStatisticsTableName,
-          Item: {
-            ID: itemID,
-            Counter: 0
-          },
-        }, (putErr, putRes) => {
-          statisticsItemCache[itemID] = true;
-          resolve({ msg: 'Create Item Successed' });
+      getStatisticItem(dynamoDb, itemID)
+        .then(({ Item }) => {
+          if (!Item) {
+            // 如果没有统计 item，则创建一个
+            dynamoDb.put({
+              TableName: BlogStatisticsTableName,
+              Item: {
+                ID: itemID,
+                Counter: 0
+              },
+            })
+              .promise()
+              .then((putRes) => {
+                statisticsItemCache[itemID] = true;
+                resolve({ msg: 'Create item successed' });
+              })
+              .catch((putErr) => {
+                reject(putErr);
+              });
+          } else {
+            statisticsItemCache[itemID] = true;
+            resolve({ msg: 'Has statistics item' });
+          }
+        })
+        .catch((getItemErr) => {
+          reject(getItemErr);
         });
-      } else {
-        statisticsItemCache[itemID] = true;
-        resolve({ msg: 'Has Record' });
-      }
     }
   });
 };
 
-const typeToFieldMap = {
-  like: 'LikeCount',
-  visit: 'VisitorCount',
-};
-
+/**
+ * 更新统计 item
+ *
+ * 流程：
+ * 1. 检查是否已存在对于某条 Blog 的 type 的统计 item
+ * 2.1. 如果存在，则返回
+ * 2.2. 如果不存在，则创建一条统计 item 并返回
+ * 3. 更新该条统计
+ */
 export const updateStatisticsItem = (
   dynamoDb: AWS.DynamoDB.DocumentClient,
   params: StatisticsParams
 ) => {
-  return new Promise(async (resolve, reject) => {
+  return new Promise((resolve, reject) => {
     const itemID = wrapStatisticsItemID(params);
-    const createRes = await createStatisticsItem(dynamoDb, {
+
+    createStatisticsItem(dynamoDb, {
       itemID, type: params.type
-    });
-    dynamoDb.update({
-      TableName: BlogStatisticsTableName,
-      Key: {
-        ID: itemID,
-      },
-      UpdateExpression: `SET #c = #c + :increase`,
-      ExpressionAttributeNames: {
-        '#c': 'Counter'
-      },
-      ExpressionAttributeValues: {
-        ':increase': 1
-      },
-      ReturnValues: "UPDATED_NEW"
-    }, (err, data) => {
-      console.log('update statictics', err, data);
-      resolve(data);
-    });
+    })
+      .then(() => {
+        dynamoDb.update({
+          TableName: BlogStatisticsTableName,
+          Key: {
+            ID: itemID,
+          },
+          UpdateExpression: `SET #c = #c + :increase`,
+          ExpressionAttributeNames: {
+            '#c': 'Counter'
+          },
+          ExpressionAttributeValues: {
+            ':increase': 1
+          },
+          ReturnValues: "UPDATED_NEW"
+        })
+          .promise()
+          .then((data) => {
+            console.log('update statictics', data);
+            resolve(data);
+          })
+          .catch(reject);
+      });
   });
 };

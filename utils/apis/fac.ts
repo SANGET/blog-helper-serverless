@@ -121,32 +121,55 @@ export const genAddFac = async (options) => {
     });
   }
 
-  // 如果该 IP 没有点了 item，则进入 record 流程
-  await dynamoDb
-    .put({
-      TableName: BlogTableName,
-      Item: {
-        ID: uuidv4(),
-        Type: BlogActionTypes[type],
-        BlogID,
-        IP: clientIP,
-        FP: fingerprint,
-        Fingerprint: fingerprintFinal,
-        ActionDate: Date.now(),
-        Title: Buffer.from(blogTitle).toString('base64')
-      }
-    })
-    .promise();
+  try {
+    // 如果该 IP 没有点了 item，则进入 record 流程
+    await dynamoDb
+      .put({
+        TableName: BlogTableName,
+        Item: {
+          ID: uuidv4(),
+          Type: BlogActionTypes[type],
+          BlogID,
+          IP: clientIP,
+          FP: fingerprint,
+          Fingerprint: fingerprintFinal,
+          ActionDate: Date.now(),
+          Title: Buffer.from(blogTitle).toString('base64')
+        }
+      })
+      .promise();
+  } catch (err) {
+    return wrapResData({
+      status: 500,
+      resData: {
+        err
+      },
+      msg: `Put ${type} item failed`
+    });
+  }
+
+  let counter;
 
   // 统计
-  updateStatisticsItem(dynamoDb, {
-    BlogID,
-    type
-  });
+  try {
+    counter = await updateStatisticsItem(dynamoDb, {
+      BlogID,
+      type
+    });
+  } catch (err) {
+    return wrapResData({
+      status: 500,
+      resData: {
+        err
+      },
+      msg: `Update statistics failed`
+    });
+  }
 
   return wrapResData({
     resData: {
-      fingerprint: fingerprintFinal
+      fingerprint: fingerprintFinal,
+      counter: counter.Attributes.Counter
     },
     msg: `${type} success`
   });

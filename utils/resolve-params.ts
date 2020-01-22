@@ -2,7 +2,7 @@ import { getClientIPAndFP, parseBody } from "./helpers";
 
 const getFingerprintFromHeader = (event) => {
   const { headers } = event;
-  return headers.FP || headers.fingerprint;
+  return headers.FP || headers.fingerprint || headers.fp;
 };
 
 /**
@@ -16,7 +16,7 @@ export const resolvePostParams = <T>(event) => {
   return {
     body,
     clientIP: ip,
-    fingerprint: fingerprint || ip
+    fingerprint
   };
 };
 
@@ -31,6 +31,6 @@ export const resolveGetParams = (event) => {
   return {
     body,
     clientIP: ip,
-    fingerprint: fingerprint || ip
+    fingerprint
   };
 };
